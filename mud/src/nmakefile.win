@@ -1,0 +1,55 @@
+# nmakefile for mud.lib (windows using nmake)
+#
+#
+#    Copyright (C) 2002-2021 TRIUMF (Vancouver, Canada)
+#    
+#    Released under the GNU LGPL - see http://www.gnu.org/licenses
+#
+#    This program is free software; you can distribute it and/or modify it under 
+#    the terms of the Lesser GNU General Public License as published by the Free 
+#    Software Foundation; either version 2 of the License, or any later version. 
+#    Accordingly, this program is distributed in the hope that it will be useful, 
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY 
+#    or FITNESS FOR A PARTICULAR PURPOSE. See the Lesser GNU General Public License 
+#    for more details.
+#
+#
+# Examples, run in a Developer Command Prompt window:
+#   nmake /F nmakefile.win 
+#   nmake /F nmakefile.win  install
+#   nmake /F nmakefile.win  clean
+# 
+
+# default C compiler command (unnecessary: this is the default anyway)
+#CC = cl
+
+# Name of the library to be made (.lib is tagged on by the linker)
+LIB      = mud
+
+# All of the object files (note omission of fortran)
+OBJFILES = mud.obj mud_misc.obj mud_all.obj mud_new.obj mud_gen.obj \
+        mud_tri_ti.obj mud_encode.obj mud_friendly.obj
+
+# Some directories
+SRC_DIR  = ..\src
+INSTALL_DIR = ..\lib\
+
+CFLAGS = /c /Ox -I$(SRC_DIR)
+ARFLAGS = /OUT:$(LIB).lib
+
+# Main target
+all: $(LIB).lib
+
+
+$(LIB).lib: $(OBJFILES)
+	del $(LIB).lib
+	lib $(ARFLAGS) $(OBJFILES)
+
+# Install the newly created library
+install: $(LIB).lib
+	copy $(LIB).lib $(INSTALL_DIR)
+
+# Clean some things up
+clean:
+	del *.obj *.res *.tds *.map
+
