@@ -29,11 +29,8 @@
  * 26-Aug-2021   DJA  Declare caddr_t in all Win. 
  */
 
-#ifdef MUD_EXPORTS
+
 #define MUD_API __declspec(dllexport)
-#else
-#define MUD_API __declspec(dllimport)
-#endif
 
 #ifdef __cplusplus
 extern "C" {
