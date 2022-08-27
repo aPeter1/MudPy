@@ -632,6 +632,15 @@ def __get_double_value(method, fh: int, other: int) -> Tuple[int, float]:
 
 
 def __get_integer_array_value(method, fh: int, other: int, length: int):
+    """
+    Used for this signature from the mud library: (int fd, int a, void* pData)
+
+    :param method:
+    :param fh:
+    :param other:
+    :param length:
+    :return:
+    """
     i_fh = ctypes.c_int(fh)
     i_other = ctypes.c_int(other)
     v_data = (ctypes.c_int * length)()
