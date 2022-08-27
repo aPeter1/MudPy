@@ -654,9 +654,9 @@ MUD_API int MUD_getHistBkgd2 _ANSI_ARGS_((int fd, int num, UINT32* pBkgd2));
 MUD_API int MUD_getHistNumEvents _ANSI_ARGS_((int fd, int num, UINT32* pNumEvents));
 MUD_API int MUD_getHistTitle _ANSI_ARGS_((int fd, int num, char* title, int strdim));
 MUD_API int MUD_getHistData _ANSI_ARGS_((int fd, int num, void* pData));
-MUD_API int MUD_getHistpData _ANSI_ARGS_((int fd, int num, void** ppData));
+int MUD_getHistpData _ANSI_ARGS_((int fd, int num, void** ppData));
 MUD_API int MUD_getHistTimeData _ANSI_ARGS_((int fd, int num, UINT32* pTimeData));
-MUD_API int MUD_getHistpTimeData _ANSI_ARGS_((int fd, int num, UINT32** ppTimeData));
+int MUD_getHistpTimeData _ANSI_ARGS_((int fd, int num, UINT32** ppTimeData));
 
 MUD_API int MUD_setHists _ANSI_ARGS_((int fd, UINT32 type, UINT32 num));
 MUD_API int MUD_setHistType _ANSI_ARGS_((int fd, int num, UINT32 type));
@@ -704,8 +704,8 @@ MUD_API int MUD_getIndVarDataType _ANSI_ARGS_((int fd, int num, UINT32* pDataTyp
 MUD_API int MUD_getIndVarHasTime _ANSI_ARGS_((int fd, int num, UINT32* pHasTime));
 MUD_API int MUD_getIndVarData _ANSI_ARGS_((int fd, int num, void* pData));
 MUD_API int MUD_getIndVarTimeData _ANSI_ARGS_((int fd, int num, UINT32* pTimeData));
-MUD_API int MUD_getIndVarpData _ANSI_ARGS_((int fd, int num, void** ppData));
-MUD_API int MUD_getIndVarpTimeData _ANSI_ARGS_((int fd, int num, UINT32** ppTimeData));
+int MUD_getIndVarpData _ANSI_ARGS_((int fd, int num, void** ppData));
+int MUD_getIndVarpTimeData _ANSI_ARGS_((int fd, int num, UINT32** ppTimeData));
 
 MUD_API int MUD_setIndVars _ANSI_ARGS_((int fd, UINT32 type, UINT32 num));
 MUD_API int MUD_setIndVarLow _ANSI_ARGS_((int fd, int num, double low));
