@@ -1,4 +1,5 @@
 import sys
+import os
 import ctypes
 
 from typing import Tuple
@@ -7,6 +8,9 @@ shared_lib_path = "..\\mud\\build\\mud.dll"
 
 if not sys.platform.startswith('win32'):
     raise Exception("MudPy is only supported for Windows")
+
+if not os.path.exists(shared_lib_path):
+    raise Exception("Could not locate the mud library at {}".format(shared_lib_path))
 
 mud_lib = ctypes.CDLL(shared_lib_path)
 
