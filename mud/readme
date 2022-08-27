@@ -4,6 +4,12 @@ This code is entirely the work of Triumf outside of any small
 adjustments made by myself to get the package to work.
 
 
+Source -> Run Example
+
+gcc -c *.c
+gcc -shared -o mud.dll *.o
+gcc -o beams BEAMS_MUD.c -L./ -lmud
+beams.exe 0.msr 0.dat
 
 
 MUD Data Format
