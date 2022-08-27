@@ -631,7 +631,7 @@ def __get_double_value(method, fh: int, other: int) -> Tuple[int, float]:
     return ret, value
 
 
-def __get_integer_array_value(method, fh: int, other: int, length: int):
+def __get_integer_array_value(method, fh: int, other: int, length: int, to_list: bool = True):
     """
     Used for this signature from the mud library: (int fd, int a, void* pData)
 
@@ -645,5 +645,5 @@ def __get_integer_array_value(method, fh: int, other: int, length: int):
     i_other = ctypes.c_int(other)
     v_data = (ctypes.c_int * length)()
     ret = method(i_fh, i_other, v_data)  # will throw exception if array is too short
-    value = list(v_data)
+    value = v_data if not to_list else list(v_data)
     return ret, value
