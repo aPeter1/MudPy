@@ -12,10 +12,12 @@ class MudFile:
     def __init__(self, file, mode='r'):
         """Creates a MudFile object for interacting with mud files.
 
-        Use with in a `with` statement to properly dispose of resources.
+        Use with in a `with` statement to properly dispose of resources. Won't through an exception for improper files
+        until you attempt to get data.
 
         :param file: Path to mud file
         :param mode: Mode for opening file
+        :raises FileNotFoundError: File does not exist. Does not raise an error if the file is not correctly formatted.
         """
         self.__cmud_file_handle = None
         self.__file_path = file
