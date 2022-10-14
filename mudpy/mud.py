@@ -5,6 +5,58 @@ import os
 from mudpy import cmud
 
 
+class Histogram:
+    def __init__(self):
+        raise NotImplementedError()
+
+    def get_hist_t0_ps(self):
+        raise NotImplementedError()
+
+    def get_hist_good_bin_one(self):
+        raise NotImplementedError()
+
+    def get_hist_good_bin_two(self):
+        raise NotImplementedError()
+
+    def get_hist_background_one(self):
+        raise NotImplementedError()
+
+    def get_hist_background_two(self):
+        raise NotImplementedError()
+
+    def get_hist_num_events(self):
+        raise NotImplementedError()
+
+    def get_hist_title(self):
+        raise NotImplementedError()
+
+
+class HistogramCollection:
+    def __init__(self):
+        raise NotImplementedError()
+
+    def __getitem__(self, item):
+        raise NotImplementedError()
+
+    def get_hist_type(self):
+        raise NotImplementedError()
+
+    def get_hist_num_bytes(self):
+        raise NotImplementedError()
+
+    def get_hist_num_bins(self):
+        raise NotImplementedError()
+
+    def get_hist_bytes_per_bin(self):
+        raise NotImplementedError()
+
+    def get_hist_fs_per_bin(self):
+        raise NotImplementedError()
+
+    def get_hist_seconds_per_bin(self):
+        raise NotImplementedError()
+
+
 class MudFile:
     """Provides access to data in a mud file.
     """
@@ -35,3 +87,66 @@ class MudFile:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         cmud.close_read(self.__cmud_file_handle)
+
+    def get_run_description(self) -> str:
+        raise NotImplementedError()
+
+    def get_experiment_number(self) -> int:
+        raise NotImplementedError()
+
+    def get_run_number(self) -> int:
+        raise NotImplementedError()
+
+    def get_elapsed_seconds(self) -> int:
+        raise NotImplementedError()
+
+    def get_time_begin(self) -> int:
+        raise NotImplementedError()
+
+    def get_time_end(self) -> int:
+        raise NotImplementedError()
+
+    def get_title(self) -> str:
+        raise NotImplementedError()
+
+    def get_lab(self) -> str:
+        raise NotImplementedError()
+
+    def get_area(self) -> str:
+        raise NotImplementedError()
+
+    def get_method(self) -> str:
+        raise NotImplementedError()
+
+    def get_apparatus(self) -> str:
+        raise NotImplementedError()
+
+    def get_insert(self) -> str:
+        raise NotImplementedError()
+
+    def get_sample(self) -> str:
+        raise NotImplementedError()
+
+    def get_orientation(self) -> str:
+        raise NotImplementedError()
+
+    def get_das(self) -> str:
+        raise NotImplementedError()
+
+    def get_experimenters(self) -> str:
+        raise NotImplementedError()
+
+    def get_temperature(self) -> float:
+        raise NotImplementedError()
+
+    def get_field(self) -> float:
+        raise NotImplementedError()
+
+    def get_subtitle(self) -> str:
+        raise NotImplementedError()
+
+    def get_comments(self) -> tuple:
+        raise NotImplementedError()
+
+    def get_histograms(self) -> HistogramCollection:
+        raise NotImplementedError()
