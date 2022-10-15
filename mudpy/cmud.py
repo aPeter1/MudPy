@@ -568,6 +568,19 @@ def get_ind_vars(fh: int):
     return __get_integer_value_3(mud_lib.MUD_getIndVars, fh)
 
 
+def get_ind_var(fh: int, num: int, length: int):
+    return IndependentVariable(
+        get_ind_var_low(fh, num)[1],
+        get_ind_var_high(fh, num)[1],
+        get_ind_var_mean(fh, num)[1],
+        get_ind_var_stddev(fh, num)[1],
+        get_ind_var_skewness(fh, num)[1],
+        get_ind_var_name(fh, num, length)[1],
+        get_ind_var_description(fh, num, length)[1],
+        get_ind_var_units(fh, num, length)[1]
+    )
+
+
 def get_ind_var_low(fh: int, num: int):
     return __get_double_value(mud_lib.MUD_getIndVarLow, fh, num)
 
