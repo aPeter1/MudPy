@@ -84,7 +84,7 @@ class RunDescription:
     comments: str
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class HistogramHeader:
     """Stores header information for a particular histogram."""
     hist_type: int
@@ -102,7 +102,7 @@ class HistogramHeader:
     title: str
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class IndependentVariable:
     """Stores results for an independent variable."""
     low: float
@@ -115,13 +115,13 @@ class IndependentVariable:
     units: str
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class Scaler:
     label: str
     count: int
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class Comment:
     time: int
     author: str
