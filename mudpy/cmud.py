@@ -3,7 +3,9 @@ import os
 import dataclasses
 import ctypes
 import logging
-from typing import Tuple, Any, Union
+from typing import Tuple, Any, Union, Optional
+
+import numpy as np
 
 __logger = logging.getLogger(__name__)
 
@@ -18,7 +20,47 @@ if not os.path.exists(shared_lib_path):
 mud_lib = ctypes.CDLL(shared_lib_path)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
+class Histogram:
+    t0_ps: int
+    t0_bin: int
+    good_bin_one: int
+    good_bin_two: int
+    background_one: int
+    background_two: int
+    num_events: int
+    title: str
+    num: int
+    data: np.ndarray
+    # fixme time_data: np.ndarray what is this?
+
+
+@dataclasses.dataclass(frozen=True)
+class HistogramCollection:
+    hist_type: int
+    num_bytes: int
+    num_bins: int
+    bytes_per_bin: int
+    fs_per_bin: int
+    seconds_per_bin: int
+    histograms: list
+
+    def __getitem__(self, item):
+        if isinstance(item, int):
+            for hist in self.histograms:
+                if hist.num == item:
+                    return hist
+        elif isinstance(item, str):
+            item = item.lower()
+            for hist in self.histograms:
+                if hist.title.lower() == item:
+                    return hist
+        else:
+            raise TypeError("HistogramCollection can only be indexed by histogram number (int) and title (str).")
+        raise IndexError(f"Histogram with index '{item}' was not found.")
+
+
+@dataclasses.dataclass(frozen=True)
 class RunDescription:
     """Stores meta information for a particular run."""
     experiment_number: int

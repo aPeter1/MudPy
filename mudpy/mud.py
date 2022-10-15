@@ -1,61 +1,8 @@
 """Provides a friendly interface to the C Mud library."""
-
 import os
 import logging
 
 from mudpy import cmud
-
-
-class Histogram:
-    def __init__(self):
-        raise NotImplementedError()
-
-    def get_hist_t0_ps(self):
-        raise NotImplementedError()
-
-    def get_hist_good_bin_one(self):
-        raise NotImplementedError()
-
-    def get_hist_good_bin_two(self):
-        raise NotImplementedError()
-
-    def get_hist_background_one(self):
-        raise NotImplementedError()
-
-    def get_hist_background_two(self):
-        raise NotImplementedError()
-
-    def get_hist_num_events(self):
-        raise NotImplementedError()
-
-    def get_hist_title(self):
-        raise NotImplementedError()
-
-
-class HistogramCollection:
-    def __init__(self):
-        raise NotImplementedError()
-
-    def __getitem__(self, item):
-        raise NotImplementedError()
-
-    def get_hist_type(self):
-        raise NotImplementedError()
-
-    def get_hist_num_bytes(self):
-        raise NotImplementedError()
-
-    def get_hist_num_bins(self):
-        raise NotImplementedError()
-
-    def get_hist_bytes_per_bin(self):
-        raise NotImplementedError()
-
-    def get_hist_fs_per_bin(self):
-        raise NotImplementedError()
-
-    def get_hist_seconds_per_bin(self):
-        raise NotImplementedError()
 
 
 class MudFile:
