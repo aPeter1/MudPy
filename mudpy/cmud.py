@@ -3,10 +3,9 @@ import os
 import dataclasses
 import ctypes
 import logging
+from typing import Tuple, Any, Union
 
 __logger = logging.getLogger(__name__)
-
-from typing import Tuple
 
 shared_lib_path = "../mud/bin/mud.dll"
 
@@ -72,6 +71,14 @@ class IndependentVariable:
     name: str
     description: str
     units: str
+
+
+@dataclasses.dataclass
+class Comment:
+    time: int
+    author: str
+    title: str
+    body: str
 
 
 """
