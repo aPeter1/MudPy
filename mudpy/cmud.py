@@ -1,6 +1,10 @@
 import sys
 import os
+import dataclasses
 import ctypes
+import logging
+
+__logger = logging.getLogger(__name__)
 
 from typing import Tuple
 
@@ -306,6 +310,11 @@ mud_lib.MUD_getCommentBody.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_char
 
 
 def get_comments(fh: int):
+    """Retrieves the type and number of comment groups.
+
+    This does not include comments 1, 2 and 3 that are set in the file header.
+    """
+    __logger.info("cmud.get_comments (MUD_getComments) will not include comments in the file header.")
     return __get_integer_value_3(mud_lib.MUD_getComments, fh)
 
 
