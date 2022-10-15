@@ -1230,7 +1230,7 @@ def __get_integer_value(method, fh: int) -> tuple[Any, Optional[Any], int]:
     i_value = ctypes.c_int()
     ret = method(i_fh, ctypes.byref(i_value))
     value = i_value.value
-    return ret, None if ret == 0 else ret, value
+    return (ret, None) if ret == 0 else (ret, value)
 
 
 def __get_integer_value_2(method, fh: int, other: int) -> Union[tuple[Any, None], tuple[Any, int]]:
@@ -1282,7 +1282,7 @@ def __get_double_value(method, fh: int, other: int) -> tuple[Any, Optional[Any],
     d_value = ctypes.c_double()
     ret = method(i_fh, i_other, ctypes.byref(d_value))
     value = d_value.value
-    return ret, None if ret == 0 else ret, value
+    return (ret, None) if ret == 0 else (ret, value)
 
 
 def __get_integer_array_value(method, fh: int, other: int, length: int, to_np_array: bool = True):
@@ -1304,4 +1304,4 @@ def __get_integer_array_value(method, fh: int, other: int, length: int, to_np_ar
     ret = method(i_fh, i_other, v_data)  # will throw exception if array is too short
     value = v_data if not to_np_array else np.array(v_data)
 
-    return ret, None if ret == 0 else ret, value
+    return (ret, None) if ret == 0 else (ret, value)
