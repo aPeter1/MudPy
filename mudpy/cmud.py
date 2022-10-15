@@ -74,6 +74,12 @@ class IndependentVariable:
 
 
 @dataclasses.dataclass
+class Scaler:
+    label: str
+    count: int
+
+
+@dataclasses.dataclass
 class Comment:
     time: int
     author: str
@@ -500,6 +506,13 @@ mud_lib.MUD_getScalerCounts.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.POINT
 
 def get_scalers(fh: int):
     return __get_integer_value_3(mud_lib.MUD_getScalers, fh)
+
+
+def get_scaler(fh: int, num: int, length: int):
+    return Scaler(
+        get_scaler_label(fh, num, length)[1],
+        get_scaler_counts(fh, num)[1]
+    )
 
 
 def get_scaler_label(fh: int, num: int, length: int):
