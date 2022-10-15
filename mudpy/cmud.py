@@ -1,6 +1,10 @@
 import sys
 import os
+import dataclasses
 import ctypes
+import logging
+
+__logger = logging.getLogger(__name__)
 
 from typing import Tuple
 
@@ -13,6 +17,61 @@ if not os.path.exists(shared_lib_path):
     raise Exception("Could not locate the mud library at {}".format(shared_lib_path))
 
 mud_lib = ctypes.CDLL(shared_lib_path)
+
+
+@dataclasses.dataclass
+class RunDescription:
+    """Stores meta information for a particular run."""
+    experiment_number: int
+    run_number: int
+    time_begin: int
+    time_end: int
+    elapsed_seconds: int
+    title: str
+    lab: str
+    area: str
+    method: str
+    apparatus: str
+    insert: str
+    sample: str
+    orientation: str
+    das: str
+    experimenters: str
+    temperature: str
+    field: str
+    subtitle: str
+    comments: str
+
+
+@dataclasses.dataclass
+class HistogramHeader:
+    """Stores header information for a particular histogram."""
+    hist_type: int
+    num_bytes: int
+    num_bins: int
+    bytes_per_bin: int
+    fs_per_bin: int
+    t0_ps: int
+    t0_bin: int
+    good_bin_one: int
+    good_bin_two: int
+    background_one: int
+    background_two: int
+    num_events: int
+    title: str
+
+
+@dataclasses.dataclass
+class IndependentVariable:
+    """Stores results for an independent variable."""
+    low: float
+    high: float
+    mean: float
+    std_dev: float
+    skewness: float
+    name: str
+    description: str
+    units: str
 
 
 """
@@ -117,8 +176,28 @@ mud_lib.MUD_getComment3.restype = ctypes.c_int
 mud_lib.MUD_getComment3.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_int]
 
 
-def get_run_desc(fh: int) -> tuple:
-    return __get_integer_value(mud_lib.MUD_getRunDesc, fh)
+def get_run_desc(fh: int, string_section_max_length: int) -> RunDescription:
+    return RunDescription(
+        get_expt_number(fh)[0],
+        get_run_number(fh)[0],
+        get_time_begin(fh)[0],
+        get_time_end(fh)[0],
+        get_elapsed_seconds(fh)[0],
+        get_title(fh, string_section_max_length)[0],
+        get_lab(fh, string_section_max_length)[0],
+        get_area(fh, string_section_max_length)[0],
+        get_method(fh, string_section_max_length)[0],
+        get_apparatus(fh, string_section_max_length)[0],
+        get_insert(fh, string_section_max_length)[0],
+        get_sample(fh, string_section_max_length)[0],
+        get_orient(fh, string_section_max_length)[0],
+        get_das(fh, string_section_max_length)[0],
+        get_experimenter(fh, string_section_max_length)[0],
+        get_temperature(fh, string_section_max_length)[0],
+        get_field(fh, string_section_max_length)[0],
+        get_subtitle(fh, string_section_max_length)[0],
+        "FIXME Pass in comments"  # FIXME Pass in comments
+    )
 
 
 def get_expt_number(fh: int) -> tuple:
@@ -231,6 +310,11 @@ mud_lib.MUD_getCommentBody.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_char
 
 
 def get_comments(fh: int):
+    """Retrieves the type and number of comment groups.
+
+    This does not include comments 1, 2 and 3 that are set in the file header.
+    """
+    __logger.info("cmud.get_comments (MUD_getComments) will not include comments in the file header.")
     return __get_integer_value_3(mud_lib.MUD_getComments, fh)
 
 

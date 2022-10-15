@@ -81,12 +81,16 @@ class MudFile:
     def __enter__(self):
         if self.__file_mode == 'r':
             self.__cmud_file_handle, _ = cmud.open_read(self.__file_path)
+            return self
         else:
             raise NotImplementedError(f"Open mode '{self.__file_mode}' is not implemented. "
                                       f"Only read ('r') is currently supported.")
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         cmud.close_read(self.__cmud_file_handle)
+
+    def get_cmud_file_handle(self):
+        return self.__cmud_file_handle
 
     def get_run_description(self) -> str:
         raise NotImplementedError()
