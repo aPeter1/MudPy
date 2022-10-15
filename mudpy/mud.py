@@ -1,6 +1,7 @@
 """Provides a friendly interface to the C Mud library."""
 
 import os
+import logging
 
 from mudpy import cmud
 
@@ -61,7 +62,7 @@ class MudFile:
     """Provides access to data in a mud file.
     """
 
-    def __init__(self, file, mode='r'):
+    def __init__(self, file: str, mode: str = 'r', default_string_buffer_size: int = 256):
         """Creates a MudFile object for interacting with mud files.
 
         Use with in a `with` statement to properly dispose of resources. Won't through an exception for improper files
@@ -69,14 +70,36 @@ class MudFile:
 
         :param file: Path to mud file
         :param mode: Mode for opening file
+        :param default_string_buffer_size: The default buffer size to use when retrieving string values
         :raises FileNotFoundError: File does not exist. Does not raise an error if the file is not correctly formatted.
         """
+        self.__logger = logging.getLogger(__name__)
         self.__cmud_file_handle = None
         self.__file_path = file
         self.__file_mode = mode.lower()
+        self.__default_string_buffer_size = int(default_string_buffer_size)
 
         if not os.path.exists(self.__file_path):
             raise FileNotFoundError(f"File {self.__file_path} does not exist.")
+
+    @property
+    def default_string_buffer_size(self):
+        return self.__default_string_buffer_size
+
+    @default_string_buffer_size.setter
+    def default_string_buffer_size(self, val):
+        if not isinstance(val, int) or int(val) <= 0:
+            raise TypeError("Default string buffer size must be a positive, non-zero, integer.")
+
+        if val < 32:
+            self.__logger.warning("Setting the default string buffer size below 32 "
+                                  "runs a higher risk of truncated data.")
+
+        self.__default_string_buffer_size = val
+
+    @property
+    def cmud_file_handle(self):
+        return self.__cmud_file_handle
 
     def __enter__(self):
         if self.__file_mode == 'r':
@@ -88,9 +111,6 @@ class MudFile:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         cmud.close_read(self.__cmud_file_handle)
-
-    def get_cmud_file_handle(self):
-        return self.__cmud_file_handle
 
     def get_run_description(self) -> str:
         raise NotImplementedError()
@@ -147,10 +167,27 @@ class MudFile:
         raise NotImplementedError()
 
     def get_subtitle(self) -> str:
-        raise NotImplementedError()
+        """Returns the subtitle, if any, for the file."""
+        return cmud.get_subtitle(self.__cmud_file_handle, self.default_string_buffer_size)[1]
 
-    def get_comments(self) -> tuple:
-        raise NotImplementedError()
+    def get_header_comments(self) -> tuple:
+        """Returns the header comments, if any, for the file."""
+        return (
+            cmud.get_comment_1(self.__cmud_file_handle, self.default_string_buffer_size)[1],
+            cmud.get_comment_2(self.__cmud_file_handle, self.default_string_buffer_size)[1],
+            cmud.get_comment_3(self.__cmud_file_handle, self.default_string_buffer_size)[1]
+        )
+
+    def get_comments(self, body_buffer_size: int = 512) -> list:
+        """Returns the comments, if any, for the file.
+
+        Note that this does not include header comments."""
+        _, _, num_comments = cmud.get_comments(self.__cmud_file_handle)
+
+        return [
+            cmud.get_comment(self.__cmud_file_handle, i, self.__default_string_buffer_size, body_buffer_size)
+            for i in range(1, num_comments + 1)
+        ]
 
     def get_histograms(self) -> HistogramCollection:
         raise NotImplementedError()
