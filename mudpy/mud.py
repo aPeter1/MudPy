@@ -167,10 +167,27 @@ class MudFile:
         raise NotImplementedError()
 
     def get_subtitle(self) -> str:
-        raise NotImplementedError()
+        """Returns the subtitle, if any, for the file."""
+        return cmud.get_subtitle(self.__cmud_file_handle, self.default_string_buffer_size)[1]
 
-    def get_comments(self) -> tuple:
-        raise NotImplementedError()
+    def get_header_comments(self) -> tuple:
+        """Returns the header comments, if any, for the file."""
+        return (
+            cmud.get_comment_1(self.__cmud_file_handle, self.default_string_buffer_size)[1],
+            cmud.get_comment_2(self.__cmud_file_handle, self.default_string_buffer_size)[1],
+            cmud.get_comment_3(self.__cmud_file_handle, self.default_string_buffer_size)[1]
+        )
+
+    def get_comments(self, body_buffer_size: int = 512) -> list:
+        """Returns the comments, if any, for the file.
+
+        Note that this does not include header comments."""
+        _, _, num_comments = cmud.get_comments(self.__cmud_file_handle)
+
+        return [
+            cmud.get_comment(self.__cmud_file_handle, i, self.__default_string_buffer_size, body_buffer_size)
+            for i in range(1, num_comments + 1)
+        ]
 
     def get_histograms(self) -> HistogramCollection:
         raise NotImplementedError()
