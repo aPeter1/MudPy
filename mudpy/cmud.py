@@ -519,7 +519,7 @@ def get_hist_seconds_per_bin(fh: int, num: int):
 
 
 def get_hist_t0_ps(fh: int, num: int):
-    return __get_double_value(mud_lib.MUD_getHistT0_Ps, fh, num)
+    return __get_integer_value_2(mud_lib.MUD_getHistT0_Ps, fh, num)
 
 
 def get_hist_t0_bin(fh: int, num: int):
@@ -780,7 +780,7 @@ def __get_string_value_2(method, fh: int, other: int, length: int, encoding='lat
         return ret, None
 
 
-def __get_integer_value(method, fh: int) -> Tuple[int, int]:
+def __get_integer_value(method, fh: int) -> tuple[Any, Optional[Any], int]:
     """
     Used for this signature from the mud library: (int fd, UINT32* value)
 
@@ -792,10 +792,10 @@ def __get_integer_value(method, fh: int) -> Tuple[int, int]:
     i_value = ctypes.c_int()
     ret = method(i_fh, ctypes.byref(i_value))
     value = i_value.value
-    return ret, value
+    return ret, None if ret == 0 else ret, value
 
 
-def __get_integer_value_2(method, fh: int, other: int) -> Tuple[int, int]:
+def __get_integer_value_2(method, fh: int, other: int) -> Union[tuple[Any, None], tuple[Any, int]]:
     """
     Used for this signature from the mud library: (int fd, int a, UINT32* value)
 
@@ -809,10 +809,10 @@ def __get_integer_value_2(method, fh: int, other: int) -> Tuple[int, int]:
     i_value = ctypes.c_int()
     ret = method(i_fh, i_other, ctypes.byref(i_value))
     value = i_value.value
-    return ret, value
+    return (ret, None) if ret == 0 else (ret, value)
 
 
-def __get_integer_value_3(method, fh: int) -> Tuple[int, int, int]:
+def __get_integer_value_3(method, fh: int) -> Union[tuple[Any, None, None], tuple[Any, int, int]]:
     """
     Used for this signature from the mud library: (int fd, UINT32* pType, UINT32* pNum)
 
@@ -826,10 +826,10 @@ def __get_integer_value_3(method, fh: int) -> Tuple[int, int, int]:
     ret = method(i_fh, ctypes.byref(i_value_1), ctypes.byref(i_value_2))
     value_1 = i_value_1.value
     value_2 = i_value_2.value
-    return ret, value_1, value_2
+    return (ret, None, None) if ret == 0 else (ret, value_1, value_2)
 
 
-def __get_double_value(method, fh: int, other: int) -> Tuple[int, float]:
+def __get_double_value(method, fh: int, other: int) -> tuple[Any, Optional[Any], float]:
     """
     Used for this signature from the mud library:
     (int fd, int a, REAL64* value) or (int fd, int a, double* value)
@@ -844,10 +844,10 @@ def __get_double_value(method, fh: int, other: int) -> Tuple[int, float]:
     d_value = ctypes.c_double()
     ret = method(i_fh, i_other, ctypes.byref(d_value))
     value = d_value.value
-    return ret, value
+    return ret, None if ret == 0 else ret, value
 
 
-def __get_integer_array_value(method, fh: int, other: int, length: int, to_list: bool = True):
+def __get_integer_array_value(method, fh: int, other: int, length: int, to_np_array: bool = True):
     """
     Used for this signature from the mud library: (int fd, int a, void* pData)
 
@@ -857,9 +857,13 @@ def __get_integer_array_value(method, fh: int, other: int, length: int, to_list:
     :param length:
     :return:
     """
+    if length is None:
+        raise TypeError("Cannot create integer array with length 'None'")
+
     i_fh = ctypes.c_int(fh)
     i_other = ctypes.c_int(other)
     v_data = (ctypes.c_int * length)()
     ret = method(i_fh, i_other, v_data)  # will throw exception if array is too short
-    value = v_data if not to_list else list(v_data)
-    return ret, value
+    value = v_data if not to_np_array else np.array(v_data)
+
+    return ret, None if ret == 0 else ret, value
