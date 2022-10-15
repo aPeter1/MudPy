@@ -89,6 +89,9 @@ class MudFile:
     def __exit__(self, exc_type, exc_val, exc_tb):
         cmud.close_read(self.__cmud_file_handle)
 
+    def get_cmud_file_handle(self):
+        return self.__cmud_file_handle
+
     def get_run_description(self) -> str:
         raise NotImplementedError()
 
