@@ -36,6 +36,7 @@ class MudFile:
 
     @default_string_buffer_size.setter
     def default_string_buffer_size(self, val):
+        """Sets the default string buffer size. Value must be a positive, non-zero, integer."""
         if not isinstance(val, int) or int(val) <= 0:
             raise TypeError("Default string buffer size must be a positive, non-zero, integer.")
 
@@ -47,6 +48,7 @@ class MudFile:
 
     @property
     def cmud_file_handle(self):
+        """Returns the cmud_file_handle. This property can not be set."""
         return self.__cmud_file_handle
 
     def __enter__(self):
@@ -207,4 +209,5 @@ class MudFile:
         ]
 
     def get_histograms(self) -> cmud.HistogramCollection:
+        """Gets a histogram collection for the file."""
         return cmud.get_histogram_collection(self.__cmud_file_handle, self.__default_string_buffer_size)
