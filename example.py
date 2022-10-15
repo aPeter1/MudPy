@@ -9,3 +9,8 @@ with mud.MudFile(r"/Users/apetersen/PycharmProjects/MudPy/006523.msr", 'r') as m
     print("\n### Getting scalars ###")
     print(mf.get_scalers())
 
+    print("\n### Getting independent variables ###")
+    print(mf.get_independent_variables())
+
+
+
