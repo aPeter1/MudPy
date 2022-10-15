@@ -3,7 +3,9 @@ import os
 import dataclasses
 import ctypes
 import logging
-from typing import Tuple, Any, Union
+from typing import Tuple, Any, Union, Optional
+
+import numpy as np
 
 __logger = logging.getLogger(__name__)
 
@@ -18,7 +20,47 @@ if not os.path.exists(shared_lib_path):
 mud_lib = ctypes.CDLL(shared_lib_path)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
+class Histogram:
+    t0_ps: int
+    t0_bin: int
+    good_bin_one: int
+    good_bin_two: int
+    background_one: int
+    background_two: int
+    num_events: int
+    title: str
+    num: int
+    data: np.ndarray
+    # fixme time_data: np.ndarray what is this?
+
+
+@dataclasses.dataclass(frozen=True)
+class HistogramCollection:
+    hist_type: int
+    num_bytes: int
+    num_bins: int
+    bytes_per_bin: int
+    fs_per_bin: int
+    seconds_per_bin: int
+    histograms: list
+
+    def __getitem__(self, item):
+        if isinstance(item, int):
+            for hist in self.histograms:
+                if hist.num == item:
+                    return hist
+        elif isinstance(item, str):
+            item = item.lower()
+            for hist in self.histograms:
+                if hist.title.lower() == item:
+                    return hist
+        else:
+            raise TypeError("HistogramCollection can only be indexed by histogram number (int) and title (str).")
+        raise IndexError(f"Histogram with index '{item}' was not found.")
+
+
+@dataclasses.dataclass(frozen=True)
 class RunDescription:
     """Stores meta information for a particular run."""
     experiment_number: int
@@ -42,7 +84,7 @@ class RunDescription:
     comments: str
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class HistogramHeader:
     """Stores header information for a particular histogram."""
     hist_type: int
@@ -60,7 +102,7 @@ class HistogramHeader:
     title: str
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class IndependentVariable:
     """Stores results for an independent variable."""
     low: float
@@ -73,13 +115,13 @@ class IndependentVariable:
     units: str
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class Scaler:
     label: str
     count: int
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class Comment:
     time: int
     author: str
@@ -417,6 +459,41 @@ def get_hists(fh: int):
     return __get_integer_value_3(mud_lib.MUD_getHists, fh)
 
 
+def get_histogram_collection(fh, length):
+    num_hists = get_hists(fh)[2]
+    histograms = [get_histogram(fh, i+1, length) for i in range(num_hists)]
+
+    if len(histograms) == 0:
+        return None
+
+    return HistogramCollection(
+        get_hist_type(fh, 1)[1],
+        get_hist_num_bytes(fh, 1)[1],
+        get_hist_num_bins(fh, 1)[1],
+        get_hist_bytes_per_bin(fh, 1)[1],
+        get_hist_fs_per_bin(fh, 1)[1],
+        get_hist_seconds_per_bin(fh, 1)[1],
+        histograms
+    )
+
+
+def get_histogram(fh: int, num: int, length: int):
+    num_bins = get_hist_num_bins(fh, num)[1]
+
+    return Histogram(
+        get_hist_t0_ps(fh, num)[1],
+        get_hist_t0_bin(fh, num)[1],
+        get_hist_good_bin_1(fh, num)[1],
+        get_hist_good_bin_2(fh, num)[1],
+        get_hist_bkgd_1(fh, num)[1],
+        get_hist_bkgd_2(fh, num)[1],
+        get_hist_num_events(fh, num)[1],
+        get_hist_title(fh, num, length)[1],
+        num,
+        get_hist_data(fh, num, num_bins),
+    )
+
+
 def get_hist_type(fh: int, num: int):
     return __get_integer_value_2(mud_lib.MUD_getHistType, fh, num)
 
@@ -442,7 +519,7 @@ def get_hist_seconds_per_bin(fh: int, num: int):
 
 
 def get_hist_t0_ps(fh: int, num: int):
-    return __get_double_value(mud_lib.MUD_getHistT0_Ps, fh, num)
+    return __get_integer_value_2(mud_lib.MUD_getHistT0_Ps, fh, num)
 
 
 def get_hist_t0_bin(fh: int, num: int):
@@ -703,7 +780,7 @@ def __get_string_value_2(method, fh: int, other: int, length: int, encoding='lat
         return ret, None
 
 
-def __get_integer_value(method, fh: int) -> Tuple[int, int]:
+def __get_integer_value(method, fh: int) -> tuple[Any, Optional[Any], int]:
     """
     Used for this signature from the mud library: (int fd, UINT32* value)
 
@@ -715,10 +792,10 @@ def __get_integer_value(method, fh: int) -> Tuple[int, int]:
     i_value = ctypes.c_int()
     ret = method(i_fh, ctypes.byref(i_value))
     value = i_value.value
-    return ret, value
+    return ret, None if ret == 0 else ret, value
 
 
-def __get_integer_value_2(method, fh: int, other: int) -> Tuple[int, int]:
+def __get_integer_value_2(method, fh: int, other: int) -> Union[tuple[Any, None], tuple[Any, int]]:
     """
     Used for this signature from the mud library: (int fd, int a, UINT32* value)
 
@@ -732,10 +809,10 @@ def __get_integer_value_2(method, fh: int, other: int) -> Tuple[int, int]:
     i_value = ctypes.c_int()
     ret = method(i_fh, i_other, ctypes.byref(i_value))
     value = i_value.value
-    return ret, value
+    return (ret, None) if ret == 0 else (ret, value)
 
 
-def __get_integer_value_3(method, fh: int) -> Tuple[int, int, int]:
+def __get_integer_value_3(method, fh: int) -> Union[tuple[Any, None, None], tuple[Any, int, int]]:
     """
     Used for this signature from the mud library: (int fd, UINT32* pType, UINT32* pNum)
 
@@ -749,10 +826,10 @@ def __get_integer_value_3(method, fh: int) -> Tuple[int, int, int]:
     ret = method(i_fh, ctypes.byref(i_value_1), ctypes.byref(i_value_2))
     value_1 = i_value_1.value
     value_2 = i_value_2.value
-    return ret, value_1, value_2
+    return (ret, None, None) if ret == 0 else (ret, value_1, value_2)
 
 
-def __get_double_value(method, fh: int, other: int) -> Tuple[int, float]:
+def __get_double_value(method, fh: int, other: int) -> tuple[Any, Optional[Any], float]:
     """
     Used for this signature from the mud library:
     (int fd, int a, REAL64* value) or (int fd, int a, double* value)
@@ -767,10 +844,10 @@ def __get_double_value(method, fh: int, other: int) -> Tuple[int, float]:
     d_value = ctypes.c_double()
     ret = method(i_fh, i_other, ctypes.byref(d_value))
     value = d_value.value
-    return ret, value
+    return ret, None if ret == 0 else ret, value
 
 
-def __get_integer_array_value(method, fh: int, other: int, length: int, to_list: bool = True):
+def __get_integer_array_value(method, fh: int, other: int, length: int, to_np_array: bool = True):
     """
     Used for this signature from the mud library: (int fd, int a, void* pData)
 
@@ -780,9 +857,13 @@ def __get_integer_array_value(method, fh: int, other: int, length: int, to_list:
     :param length:
     :return:
     """
+    if length is None:
+        raise TypeError("Cannot create integer array with length 'None'")
+
     i_fh = ctypes.c_int(fh)
     i_other = ctypes.c_int(other)
     v_data = (ctypes.c_int * length)()
     ret = method(i_fh, i_other, v_data)  # will throw exception if array is too short
-    value = v_data if not to_list else list(v_data)
-    return ret, value
+    value = v_data if not to_np_array else np.array(v_data)
+
+    return ret, None if ret == 0 else ret, value
