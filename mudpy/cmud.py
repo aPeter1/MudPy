@@ -325,6 +325,15 @@ def get_comments(fh: int):
     return __get_integer_value_3(mud_lib.MUD_getComments, fh)
 
 
+def get_comment(fh: int, num: int, short_length: int, long_length: int):
+    return Comment(
+        get_comment_time(fh, num)[1],
+        get_comment_author(fh, num, short_length)[1],
+        get_comment_title(fh, num, short_length)[1],
+        get_comment_body(fh, num, long_length)[1]
+    )
+
+
 def get_comment_prev(fh: int, num: int):
     return __get_integer_value_2(mud_lib.MUD_getCommentPrev, fh, num)
 
