@@ -166,6 +166,15 @@ class MudFile:
     def get_field(self) -> float:
         raise NotImplementedError()
 
+    def get_independent_variables(self):
+        """Returns the independent variables, if any, for the file."""
+        _, _, num_variables = cmud.get_ind_vars(self.__cmud_file_handle)
+
+        return [
+            cmud.get_ind_var(self.__cmud_file_handle, i, self.__default_string_buffer_size)
+            for i in range(1, num_variables + 1)
+        ]
+
     def get_scalers(self) -> list:
         """Returns the scalers, if any, for the file."""
         _, _, num_scalers = cmud.get_scalers(self.__cmud_file_handle)
