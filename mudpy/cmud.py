@@ -459,6 +459,41 @@ def get_hists(fh: int):
     return __get_integer_value_3(mud_lib.MUD_getHists, fh)
 
 
+def get_histogram_collection(fh, length):
+    num_hists = get_hists(fh)[2]
+    histograms = [get_histogram(fh, i+1, length) for i in range(num_hists)]
+
+    if len(histograms) == 0:
+        return None
+
+    return HistogramCollection(
+        get_hist_type(fh, 1)[1],
+        get_hist_num_bytes(fh, 1)[1],
+        get_hist_num_bins(fh, 1)[1],
+        get_hist_bytes_per_bin(fh, 1)[1],
+        get_hist_fs_per_bin(fh, 1)[1],
+        get_hist_seconds_per_bin(fh, 1)[1],
+        histograms
+    )
+
+
+def get_histogram(fh: int, num: int, length: int):
+    num_bins = get_hist_num_bins(fh, num)[1]
+
+    return Histogram(
+        get_hist_t0_ps(fh, num)[1],
+        get_hist_t0_bin(fh, num)[1],
+        get_hist_good_bin_1(fh, num)[1],
+        get_hist_good_bin_2(fh, num)[1],
+        get_hist_bkgd_1(fh, num)[1],
+        get_hist_bkgd_2(fh, num)[1],
+        get_hist_num_events(fh, num)[1],
+        get_hist_title(fh, num, length)[1],
+        num,
+        get_hist_data(fh, num, num_bins),
+    )
+
+
 def get_hist_type(fh: int, num: int):
     return __get_integer_value_2(mud_lib.MUD_getHistType, fh, num)
 
