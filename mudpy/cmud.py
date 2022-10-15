@@ -621,7 +621,7 @@ def __from_bytes(byte_string: bytes, encoding: str):
     return byte_string.strip(b'\x00').decode(encoding=encoding, errors="backslashreplace")
 
 
-def __get_string_value(method, fh: int, length: int, encoding='latin-1') -> Tuple[int, str]:
+def __get_string_value(method, fh: int, length: int, encoding='latin-1') -> Union[tuple[Any, str], tuple[Any, None]]:
     """
     Used for this signature from mud library: (int fd, char* value, int strdim)
 
@@ -629,17 +629,22 @@ def __get_string_value(method, fh: int, length: int, encoding='latin-1') -> Tupl
     :param fh:
     :param length:
     :param encoding:
-    :return:
+    :return: String value will be None if it is empty or whitespace only
     """
     i_fh = ctypes.c_int(fh)
     i_length = ctypes.c_int(length)
     c_value = bytes(length)
     ret = method(i_fh, c_value, i_length)
     value = __from_bytes(c_value, encoding)
-    return ret, value
+
+    if value and not value.isspace():
+        return ret, value
+    else:
+        return ret, None
 
 
-def __get_string_value_2(method, fh: int, other: int, length: int, encoding='latin-1') -> Tuple[int, str]:
+def __get_string_value_2(method, fh: int, other: int, length: int, encoding='latin-1') -> Union[
+    tuple[Any, str], tuple[Any, None]]:
     """
     Used for this signature from the mud library: (int fd, int a, char* value, int strdim)
 
@@ -648,7 +653,7 @@ def __get_string_value_2(method, fh: int, other: int, length: int, encoding='lat
     :param other:
     :param length:
     :param encoding:
-    :return:
+    :return: String value will be None if it is empty or whitespace only
     """
     i_fh = ctypes.c_int(fh)
     i_other = ctypes.c_int(other)
@@ -656,7 +661,11 @@ def __get_string_value_2(method, fh: int, other: int, length: int, encoding='lat
     c_value = bytes(length)
     ret = method(i_fh, i_other, c_value, i_length)
     value = __from_bytes(c_value, encoding)
-    return ret, value
+
+    if value and not value.isspace():
+        return ret, value
+    else:
+        return ret, None
 
 
 def __get_integer_value(method, fh: int) -> Tuple[int, int]:
