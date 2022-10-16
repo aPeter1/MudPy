@@ -29,8 +29,6 @@ class Constants(enum.IntEnum):
 @dataclasses.dataclass(frozen=True)
 class Histogram:
     """Stores the data and header information for a histogram.
-
-    Note that historical_data and time_data will be None for most files.
     """
     t0_ps: int
     t0_bin: int
@@ -119,7 +117,9 @@ class HistogramHeader:
 
 @dataclasses.dataclass(frozen=True)
 class IndependentVariable:
-    """Stores results for an independent variable."""
+    """Stores results for an independent variable.
+
+    Note that historical_data and time_data will be None for most files."""
     low: float
     high: float
     mean: float
@@ -128,6 +128,8 @@ class IndependentVariable:
     name: str
     description: str
     units: str
+    historical_data: list
+    time_data: int
 
 
 @dataclasses.dataclass(frozen=True)
