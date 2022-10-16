@@ -3,6 +3,7 @@ import os
 import dataclasses
 import ctypes
 import logging
+import enum
 from typing import Tuple, Any, Union, Optional
 
 import numpy as np
@@ -18,6 +19,11 @@ if not os.path.exists(shared_lib_path):
     raise Exception("Could not locate the mud library at {}".format(shared_lib_path))
 
 mud_lib = ctypes.CDLL(shared_lib_path)
+
+
+class Constants(enum.IntEnum):
+    IND_VAR_ID = 16908293
+    IND_VAR_ARR_ID = 16908294
 
 
 @dataclasses.dataclass(frozen=True)
