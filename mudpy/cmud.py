@@ -1169,6 +1169,32 @@ C METHOD ABSTRACTIONS
 """
 
 
+def __numeric_ctype_from_size(size: int, real: bool = False):
+    """Given the byte size of the type and boolean real the method returns an appropriate ctype.
+
+    :param size:
+    :param real:
+    :return:
+    """
+    if real:
+        if size == 4:
+            return ctypes.c_float
+        elif size == 8:
+            return ctypes.c_double
+        elif size == 10:
+            return ctypes.c_longdouble
+    else:
+        if size == 1:
+            return ctypes.c_int8
+        elif size == 2:
+            return ctypes.c_int16
+        elif size == 4:
+            return ctypes.c_int32
+        elif size == 8:
+            return ctypes.c_int64
+    raise Exception(f"Unable to determine the appropriate ctype for size {size} and real equals {real}")
+
+
 def __to_bytes(string: str):
     """Converts string to a byte array."""
     return bytes(string, 'ascii')
@@ -1226,7 +1252,7 @@ def __get_string_value_2(method, fh: int, other: int, length: int, encoding='lat
         return ret, None
 
 
-def __get_integer_value(method, fh: int) -> tuple[Any, Optional[Any], int]:
+def __get_integer_value(method, fh: int) -> Union[tuple[Any, None], tuple[Any, int]]:
     """
     Used for this signature from the mud library: (int fd, UINT32* value)
 
@@ -1275,7 +1301,7 @@ def __get_integer_value_3(method, fh: int) -> Union[tuple[Any, None, None], tupl
     return (ret, None, None) if ret == 0 else (ret, value_1, value_2)
 
 
-def __get_double_value(method, fh: int, other: int) -> tuple[Any, Optional[Any], float]:
+def __get_double_value(method, fh: int, other: int) -> Union[tuple[Any, None], tuple[Any, float]]:
     """
     Used for this signature from the mud library:
     (int fd, int a, REAL64* value) or (int fd, int a, double* value)
@@ -1293,7 +1319,7 @@ def __get_double_value(method, fh: int, other: int) -> tuple[Any, Optional[Any],
     return (ret, None) if ret == 0 else (ret, value)
 
 
-def __get_integer_array_value(method, fh: int, other: int, length: int, to_np_array: bool = True):
+def __get_numeric_array_value(method, fh: int, other: int, length: int, datatype, to_np_array: bool = True):
     """
     Used for this signature from the mud library: (int fd, int a, void* pData)
 
@@ -1304,12 +1330,34 @@ def __get_integer_array_value(method, fh: int, other: int, length: int, to_np_ar
     :return:
     """
     if length is None:
-        raise TypeError("Cannot create integer array with length 'None'")
+        raise TypeError("Cannot create numeric array with length 'None'")
 
     i_fh = ctypes.c_int(fh)
     i_other = ctypes.c_int(other)
-    v_data = (ctypes.c_int * length)()
+    v_data = (datatype * length)()
     ret = method(i_fh, i_other, v_data)  # will throw exception if array is too short
     value = v_data if not to_np_array else np.array(v_data)
+
+    return (ret, None) if ret == 0 else (ret, value)
+
+
+def __get_string_array_value(method, fh: int, other: int, length: int, to_list: bool = True):
+    """
+    Used for this signature from the mud library: (int fd, int a, void* pData)
+
+    :param method:
+    :param fh:
+    :param other:
+    :param length:
+    :return:
+    """
+    if length is None:
+        raise TypeError("Cannot create string array with length 'None'")
+
+    i_fh = ctypes.c_int(fh)
+    i_other = ctypes.c_int(other)
+    v_data = (ctypes.c_char_p * length)()
+    ret = method(i_fh, i_other, v_data)  # will throw exception if array is too short
+    value = v_data if not to_list else list(v_data)
 
     return (ret, None) if ret == 0 else (ret, value)
