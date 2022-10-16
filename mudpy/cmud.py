@@ -1135,7 +1135,7 @@ def get_ind_var_units(fh: int, num: int, length: int):
 
 
 def get_ind_var_num_data(fh: int, num: int):
-    """TODO Unsure
+    """Gets the number of data points in the historical data.
 
     :param fh:
     :param num:
@@ -1193,6 +1193,12 @@ def get_ind_var_data(fh: int, num: int, length: int, elem_size: int, data_type: 
 
 
 def get_ind_var_time_data(fh: int, num: int):
+    """Get the time data for an independent variable.
+
+    :param fh:
+    :param num:
+    :return:
+    """
     return __get_integer_value_2(mud_lib.MUD_getIndVarTimeData, fh, num)
 
 
