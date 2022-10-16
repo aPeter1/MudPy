@@ -889,7 +889,7 @@ def get_hist_data(fh: int, num: int, length: int):
     :param length:
     :return:
     """
-    return __get_integer_array_value(mud_lib.MUD_getHistData, fh, num, length)
+    return __get_numeric_array_value(mud_lib.MUD_getHistData, fh, num, length, ctypes.c_int)
 
 
 def get_hist_time_data(fh: int, num: int):
@@ -1021,6 +1021,22 @@ def get_ind_var(fh: int, num: int, length: int):
     :param length:
     :return:
     """
+    _, p_type, _ = get_ind_vars(fh)
+
+    if p_type == Constants.IND_VAR_ARR_ID:
+
+        if get_ind_var_has_time(fh, num)[1] == 1:
+            _, time_data = get_ind_var_time_data(fh, num)
+        else:
+            time_data = None
+
+        _, data_type = get_ind_var_data_type(fh, num)
+        _, num_data = get_ind_var_num_data(fh, num)
+        _, elem_size = get_ind_var_elem_size(fh, num)
+        _, historical_data = get_ind_var_data(fh, num, num_data, elem_size, data_type)
+    else:
+        historical_data, time_data = (None, None)
+
     return IndependentVariable(
         get_ind_var_low(fh, num)[1],
         get_ind_var_high(fh, num)[1],
@@ -1029,7 +1045,9 @@ def get_ind_var(fh: int, num: int, length: int):
         get_ind_var_skewness(fh, num)[1],
         get_ind_var_name(fh, num, length)[1],
         get_ind_var_description(fh, num, length)[1],
-        get_ind_var_units(fh, num, length)[1]
+        get_ind_var_units(fh, num, length)[1],
+        historical_data,
+        time_data
     )
 
 
@@ -1147,11 +1165,31 @@ def get_ind_var_data_type(fh: int, num: int):
 
 
 def get_ind_var_has_time(fh: int, num: int):
+    """Indicates if there is time data.
+
+    :param fh:
+    :param num:
+    :return:
+    """
     return __get_integer_value_2(mud_lib.MUD_getIndVarHasTime, fh, num)
 
 
-def get_ind_var_data(fh: int, num: int, length: int):
-    return __get_integer_array_value(mud_lib.MUD_getIndVarData, fh, num, length)
+def get_ind_var_data(fh: int, num: int, length: int, elem_size: int, data_type: int = 1):
+    """Returns the historical data of the independent variable, if any.
+
+    :param elem_size:
+    :param fh:
+    :param num:
+    :param length:
+    :param data_type: Either 1 (int), 2 (real), or 3 (string)
+    :return:
+    """
+    if data_type == 1 or data_type == 2:
+        ctype_data_type = __numeric_ctype_from_size(elem_size, data_type == 2)
+        return __get_numeric_array_value(mud_lib.MUD_getIndVarData, fh, num, length, ctype_data_type)
+
+    if data_type == 3:
+        return __get_string_array_value(mud_lib.MUD_getIndVarData, fh, num, length)
 
 
 def get_ind_var_time_data(fh: int, num: int):
