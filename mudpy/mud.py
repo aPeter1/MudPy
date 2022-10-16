@@ -2,6 +2,7 @@
 import os
 import logging
 import re
+from typing import Optional
 
 from mudpy import cmud
 
@@ -35,8 +36,12 @@ class MudFile:
         return self.__default_string_buffer_size
 
     @default_string_buffer_size.setter
-    def default_string_buffer_size(self, val):
-        """Sets the default string buffer size. Value must be a positive, non-zero, integer."""
+    def default_string_buffer_size(self, val: int):
+        """Sets the default string buffer size.
+
+        :param val: Positive, non-zero, integer.
+        :return:
+        """
         if not isinstance(val, int) or int(val) <= 0:
             raise TypeError("Default string buffer size must be a positive, non-zero, integer.")
 
@@ -66,67 +71,67 @@ class MudFile:
         """Returns the complete run description."""
         return cmud.get_run_desc(self.__cmud_file_handle, self.__default_string_buffer_size)
 
-    def get_experiment_number(self) -> int:
+    def get_experiment_number(self) -> Optional[int]:
         """Returns the experiment number field."""
         return cmud.get_expt_number(self.__cmud_file_handle)[1]
 
-    def get_run_number(self) -> int:
+    def get_run_number(self) -> Optional[int]:
         """Returns the run number field."""
         return cmud.get_run_number(self.__cmud_file_handle)[1]
 
-    def get_elapsed_seconds(self) -> int:
+    def get_elapsed_seconds(self) -> Optional[int]:
         """Returns the elapsed seconds field."""
         return cmud.get_elapsed_seconds(self.__cmud_file_handle)[1]
 
-    def get_time_begin(self) -> int:
+    def get_time_begin(self) -> Optional[int]:
         """Returns the time begin field."""
         return cmud.get_time_begin(self.__cmud_file_handle)[1]
 
-    def get_time_end(self) -> int:
+    def get_time_end(self) -> Optional[int]:
         """Returns the time end field."""
         return cmud.get_time_end(self.__cmud_file_handle)[1]
 
-    def get_title(self) -> str:
+    def get_title(self) -> Optional[str]:
         """Returns the title field."""
         return cmud.get_title(self.__cmud_file_handle, self.__default_string_buffer_size)[1]
 
-    def get_lab(self) -> str:
+    def get_lab(self) -> Optional[str]:
         """Returns the lab field."""
         return cmud.get_lab(self.__cmud_file_handle, self.__default_string_buffer_size)[1]
 
-    def get_area(self) -> str:
+    def get_area(self) -> Optional[str]:
         """Returns the area field."""
         return cmud.get_area(self.__cmud_file_handle, self.__default_string_buffer_size)[1]
 
-    def get_method(self) -> str:
+    def get_method(self) -> Optional[str]:
         """Returns the method field."""
         return cmud.get_method(self.__cmud_file_handle, self.__default_string_buffer_size)[1]
 
-    def get_apparatus(self) -> str:
+    def get_apparatus(self) -> Optional[str]:
         """Returns the apparatus field."""
         return cmud.get_apparatus(self.__cmud_file_handle, self.__default_string_buffer_size)[1]
 
-    def get_insert(self) -> str:
+    def get_insert(self) -> Optional[str]:
         """Returns the insert field."""
         return cmud.get_insert(self.__cmud_file_handle, self.__default_string_buffer_size)[1]
 
-    def get_sample(self) -> str:
+    def get_sample(self) -> Optional[str]:
         """Returns the sample field."""
         return cmud.get_sample(self.__cmud_file_handle, self.__default_string_buffer_size)[1]
 
-    def get_orientation(self) -> str:
+    def get_orientation(self) -> Optional[str]:
         """Returns the orientation of the sample."""
         return cmud.get_orient(self.__cmud_file_handle, self.__default_string_buffer_size)[1]
 
-    def get_das(self) -> str:
+    def get_das(self) -> Optional[str]:
         """Returns the das (data acquisition system) field."""
         return cmud.get_das(self.__cmud_file_handle, self.__default_string_buffer_size)[1]
 
-    def get_experimenters(self) -> str:
+    def get_experimenters(self) -> Optional[str]:
         """Returns the experimenter field."""
         return cmud.get_experimenter(self.__cmud_file_handle, self.__default_string_buffer_size)[1]
 
-    def get_temperature(self) -> tuple:
+    def get_temperature(self) -> tuple[Optional[float], Optional[str]]:
         """Returns the temperature, with units."""
         temperature_with_units = cmud.get_temperature(self.__cmud_file_handle, self.__default_string_buffer_size)[1]
 
@@ -138,7 +143,7 @@ class MudFile:
 
         if len(temp_value.groups()) == 0:
             return None, None
-        value = temp_value.group(0)
+        value = float(temp_value.group(0))
 
         if len(temp_units.groups()) == 0:
             return value, None
@@ -146,7 +151,7 @@ class MudFile:
 
         return value, units
 
-    def get_field(self) -> tuple:
+    def get_field(self) -> tuple[Optional[float], Optional[str]]:
         """Returns the magnetic field, with units."""
         field_with_units = cmud.get_field(self.__cmud_file_handle, self.__default_string_buffer_size)[1]
 
@@ -166,7 +171,7 @@ class MudFile:
 
         return value, units
 
-    def get_independent_variables(self):
+    def get_independent_variables(self) -> list[cmud.IndependentVariable]:
         """Returns the independent variables, if any, for the file."""
         _, _, num_variables = cmud.get_ind_vars(self.__cmud_file_handle)
 
@@ -178,7 +183,7 @@ class MudFile:
             for i in range(1, num_variables + 1)
         ]
 
-    def get_scalers(self) -> list:
+    def get_scalers(self) -> list[cmud.Scaler]:
         """Returns the scalers, if any, for the file."""
         _, _, num_scalers = cmud.get_scalers(self.__cmud_file_handle)
 
@@ -190,11 +195,11 @@ class MudFile:
             for i in range(1, num_scalers + 1)
         ]
 
-    def get_subtitle(self) -> str:
+    def get_subtitle(self) -> Optional[str]:
         """Returns the subtitle, if any, for the file."""
         return cmud.get_subtitle(self.__cmud_file_handle, self.default_string_buffer_size)[1]
 
-    def get_header_comments(self) -> tuple:
+    def get_header_comments(self) -> tuple[Optional[str], Optional[str], Optional[str]]:
         """Returns the header comments, if any, for the file."""
         return (
             cmud.get_comment_1(self.__cmud_file_handle, self.default_string_buffer_size)[1],
@@ -202,7 +207,7 @@ class MudFile:
             cmud.get_comment_3(self.__cmud_file_handle, self.default_string_buffer_size)[1]
         )
 
-    def get_comments(self, body_buffer_size: int = 512) -> list:
+    def get_comments(self, body_buffer_size: int = 512) -> list[cmud.Comment]:
         """Returns the comments, if any, for the file.
 
         Note that this does not include header comments."""
