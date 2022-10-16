@@ -129,6 +129,10 @@ class MudFile:
     def get_temperature(self) -> tuple:
         """Returns the temperature, with units."""
         temperature_with_units = cmud.get_temperature(self.__cmud_file_handle, self.__default_string_buffer_size)[1]
+
+        if temperature_with_units is None:
+            return None, None
+
         temp_value = re.search(r"(\d*\.*\d*)", temperature_with_units)
         temp_units = re.search(r"([a-zA-Z]+)", temperature_with_units)
 
@@ -145,6 +149,10 @@ class MudFile:
     def get_field(self) -> tuple:
         """Returns the magnetic field, with units."""
         field_with_units = cmud.get_field(self.__cmud_file_handle, self.__default_string_buffer_size)[1]
+
+        if field_with_units is None:
+            return None, None
+
         field_value = re.search(r"(\d*\.*\d*)", field_with_units)
         field_units = re.search(r"([a-zA-Z]+)", field_with_units)
 

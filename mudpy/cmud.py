@@ -3,6 +3,7 @@ import os
 import dataclasses
 import ctypes
 import logging
+import enum
 from typing import Tuple, Any, Union, Optional
 
 import numpy as np
@@ -20,11 +21,14 @@ if not os.path.exists(shared_lib_path):
 mud_lib = ctypes.CDLL(shared_lib_path)
 
 
+class Constants(enum.IntEnum):
+    IND_VAR_ID = 16908293
+    IND_VAR_ARR_ID = 16908294
+
+
 @dataclasses.dataclass(frozen=True)
 class Histogram:
     """Stores the data and header information for a histogram.
-
-    Note that historical_data and time_data will be None for most files.
     """
     t0_ps: int
     t0_bin: int
@@ -113,7 +117,9 @@ class HistogramHeader:
 
 @dataclasses.dataclass(frozen=True)
 class IndependentVariable:
-    """Stores results for an independent variable."""
+    """Stores results for an independent variable.
+
+    Note that historical_data and time_data will be None for most files."""
     low: float
     high: float
     mean: float
@@ -122,6 +128,8 @@ class IndependentVariable:
     name: str
     description: str
     units: str
+    historical_data: list
+    time_data: int
 
 
 @dataclasses.dataclass(frozen=True)
@@ -881,7 +889,7 @@ def get_hist_data(fh: int, num: int, length: int):
     :param length:
     :return:
     """
-    return __get_integer_array_value(mud_lib.MUD_getHistData, fh, num, length)
+    return __get_numeric_array_value(mud_lib.MUD_getHistData, fh, num, length, ctypes.c_int)
 
 
 def get_hist_time_data(fh: int, num: int):
@@ -1013,6 +1021,22 @@ def get_ind_var(fh: int, num: int, length: int):
     :param length:
     :return:
     """
+    _, p_type, _ = get_ind_vars(fh)
+
+    if p_type == Constants.IND_VAR_ARR_ID:
+
+        if get_ind_var_has_time(fh, num)[1] == 1:
+            _, time_data = get_ind_var_time_data(fh, num)
+        else:
+            time_data = None
+
+        _, data_type = get_ind_var_data_type(fh, num)
+        _, num_data = get_ind_var_num_data(fh, num)
+        _, elem_size = get_ind_var_elem_size(fh, num)
+        _, historical_data = get_ind_var_data(fh, num, num_data, elem_size, data_type)
+    else:
+        historical_data, time_data = (None, None)
+
     return IndependentVariable(
         get_ind_var_low(fh, num)[1],
         get_ind_var_high(fh, num)[1],
@@ -1021,7 +1045,9 @@ def get_ind_var(fh: int, num: int, length: int):
         get_ind_var_skewness(fh, num)[1],
         get_ind_var_name(fh, num, length)[1],
         get_ind_var_description(fh, num, length)[1],
-        get_ind_var_units(fh, num, length)[1]
+        get_ind_var_units(fh, num, length)[1],
+        historical_data,
+        time_data
     )
 
 
@@ -1109,7 +1135,7 @@ def get_ind_var_units(fh: int, num: int, length: int):
 
 
 def get_ind_var_num_data(fh: int, num: int):
-    """TODO Unsure
+    """Gets the number of data points in the historical data.
 
     :param fh:
     :param num:
@@ -1139,14 +1165,40 @@ def get_ind_var_data_type(fh: int, num: int):
 
 
 def get_ind_var_has_time(fh: int, num: int):
+    """Indicates if there is time data.
+
+    :param fh:
+    :param num:
+    :return:
+    """
     return __get_integer_value_2(mud_lib.MUD_getIndVarHasTime, fh, num)
 
 
-def get_ind_var_data(fh: int, num: int, length: int):
-    return __get_integer_array_value(mud_lib.MUD_getIndVarData, fh, num, length)
+def get_ind_var_data(fh: int, num: int, length: int, elem_size: int, data_type: int = 1):
+    """Returns the historical data of the independent variable, if any.
+
+    :param elem_size:
+    :param fh:
+    :param num:
+    :param length:
+    :param data_type: Either 1 (int), 2 (real), or 3 (string)
+    :return:
+    """
+    if data_type == 1 or data_type == 2:
+        ctype_data_type = __numeric_ctype_from_size(elem_size, data_type == 2)
+        return __get_numeric_array_value(mud_lib.MUD_getIndVarData, fh, num, length, ctype_data_type)
+
+    if data_type == 3:
+        return __get_string_array_value(mud_lib.MUD_getIndVarData, fh, num, length)
 
 
 def get_ind_var_time_data(fh: int, num: int):
+    """Get the time data for an independent variable.
+
+    :param fh:
+    :param num:
+    :return:
+    """
     return __get_integer_value_2(mud_lib.MUD_getIndVarTimeData, fh, num)
 
 
@@ -1159,6 +1211,32 @@ MUD FILE INDEPENDENT VARIABLE SETTERS
 """
 C METHOD ABSTRACTIONS
 """
+
+
+def __numeric_ctype_from_size(size: int, real: bool = False):
+    """Given the byte size of the type and boolean real the method returns an appropriate ctype.
+
+    :param size:
+    :param real:
+    :return:
+    """
+    if real:
+        if size == 4:
+            return ctypes.c_float
+        elif size == 8:
+            return ctypes.c_double
+        elif size == 10:
+            return ctypes.c_longdouble
+    else:
+        if size == 1:
+            return ctypes.c_int8
+        elif size == 2:
+            return ctypes.c_int16
+        elif size == 4:
+            return ctypes.c_int32
+        elif size == 8:
+            return ctypes.c_int64
+    raise Exception(f"Unable to determine the appropriate ctype for size {size} and real equals {real}")
 
 
 def __to_bytes(string: str):
@@ -1218,7 +1296,7 @@ def __get_string_value_2(method, fh: int, other: int, length: int, encoding='lat
         return ret, None
 
 
-def __get_integer_value(method, fh: int) -> tuple[Any, Optional[Any], int]:
+def __get_integer_value(method, fh: int) -> Union[tuple[Any, None], tuple[Any, int]]:
     """
     Used for this signature from the mud library: (int fd, UINT32* value)
 
@@ -1267,7 +1345,7 @@ def __get_integer_value_3(method, fh: int) -> Union[tuple[Any, None, None], tupl
     return (ret, None, None) if ret == 0 else (ret, value_1, value_2)
 
 
-def __get_double_value(method, fh: int, other: int) -> tuple[Any, Optional[Any], float]:
+def __get_double_value(method, fh: int, other: int) -> Union[tuple[Any, None], tuple[Any, float]]:
     """
     Used for this signature from the mud library:
     (int fd, int a, REAL64* value) or (int fd, int a, double* value)
@@ -1285,7 +1363,7 @@ def __get_double_value(method, fh: int, other: int) -> tuple[Any, Optional[Any],
     return (ret, None) if ret == 0 else (ret, value)
 
 
-def __get_integer_array_value(method, fh: int, other: int, length: int, to_np_array: bool = True):
+def __get_numeric_array_value(method, fh: int, other: int, length: int, datatype, to_np_array: bool = True):
     """
     Used for this signature from the mud library: (int fd, int a, void* pData)
 
@@ -1296,12 +1374,34 @@ def __get_integer_array_value(method, fh: int, other: int, length: int, to_np_ar
     :return:
     """
     if length is None:
-        raise TypeError("Cannot create integer array with length 'None'")
+        raise TypeError("Cannot create numeric array with length 'None'")
 
     i_fh = ctypes.c_int(fh)
     i_other = ctypes.c_int(other)
-    v_data = (ctypes.c_int * length)()
+    v_data = (datatype * length)()
     ret = method(i_fh, i_other, v_data)  # will throw exception if array is too short
     value = v_data if not to_np_array else np.array(v_data)
+
+    return (ret, None) if ret == 0 else (ret, value)
+
+
+def __get_string_array_value(method, fh: int, other: int, length: int, to_list: bool = True):
+    """
+    Used for this signature from the mud library: (int fd, int a, void* pData)
+
+    :param method:
+    :param fh:
+    :param other:
+    :param length:
+    :return:
+    """
+    if length is None:
+        raise TypeError("Cannot create string array with length 'None'")
+
+    i_fh = ctypes.c_int(fh)
+    i_other = ctypes.c_int(other)
+    v_data = (ctypes.c_char_p * length)()
+    ret = method(i_fh, i_other, v_data)  # will throw exception if array is too short
+    value = v_data if not to_list else list(v_data)
 
     return (ret, None) if ret == 0 else (ret, value)
